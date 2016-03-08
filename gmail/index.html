@@ -1,0 +1,78 @@
+<html>
+  <head>
+   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript">
+      // Your Client ID can be retrieved from your project in the Google
+      // Developer Console, https://console.developers.google.com
+      var CLIENT_ID = '482151638629-91qthcmhbr7sp8g53n2hkrvaof0brlu6.apps.googleusercontent.com';
+
+      var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+
+      function checkAuth() {
+        gapi.auth.authorize(
+          {
+            'client_id': CLIENT_ID,
+            'scope': SCOPES.join(' '),
+            'immediate': true
+          }, handleAuthResult);
+      }
+
+      function handleAuthResult(authResult) {
+        var authorizeDiv = document.getElementById('authorize-div');
+        if (authResult && !authResult.error) {
+          authorizeDiv.style.display = 'none';
+          loadGmailApi();
+        } else {
+          authorizeDiv.style.display = 'inline';
+        }
+      }
+
+      function handleAuthClick(event) {
+        gapi.auth.authorize(
+          {client_id: CLIENT_ID, scope: SCOPES, immediate: false},
+          handleAuthResult);
+        return false;
+      }
+
+      function loadGmailApi() {
+        gapi.client.load('gmail', 'v1', listLabels);
+      }
+
+      function listLabels() {
+        var request = gapi.client.gmail.users.messages.list({
+          'userId': 'me',
+          'id': 'INBOX',
+          'maxResults': 10
+        });
+
+          request.execute(function(resp) {
+          console.log(resp.messages)
+           $.each(resp.messages, function() {
+            var messageRequest = gapi.client.gmail.users.messages.get({
+            'userId': 'me',
+            'id': this.id
+          });
+
+          messageRequest.execute(appendMessageRow);
+          });
+        });
+      }
+
+    function appendMessageRow(message) {
+        console.log(message)
+    }
+
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=checkAuth">
+    </script>
+  </head>
+  <body>
+    <div id="authorize-div" style="display: none">
+      <span>Authorize access to Gmail API</span>
+      <button id="authorize-button" onclick="handleAuthClick(event)">
+        Authorize
+      </button>
+    </div>
+    <pre id="output"></pre>
+  </body>
+</html>
